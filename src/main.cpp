@@ -1,8 +1,85 @@
 #include <allegro5/allegro.h>
 #include <iostream>
+#include <string>
+#include <vector>
+
+struct GridPosition {
+    int row;
+    int col;
+};
 
 int main()
 {
+    constexpr int TILE_SIZE = 32;
+
+    std::vector<std::string> maze = {
+    "###############",
+    "#P............#",
+    "#.###.###.###.#",
+    "#.............#",
+    "#.###.#.#.###.#",
+    "#.....#.#.....#",
+    "###.#.....#.###",
+    "#...#.G...#...#",
+    "#.###.###.###.#",
+    "#.............#",
+    "###############"
+    };
+
+    const int mazeRows = static_cast<int>(maze.size());
+    const int mazeCols = static_cast<int>(maze[0].size());
+
+    for (const std::string& row : maze)
+    {
+        if (static_cast<int>(row.size()) != mazeCols)
+            {
+                std::cerr << "Maze rows must have equal widths.\n";
+                return 1;
+            }
+    }
+
+    GridPosition playerSpawn{-1, -1};
+    std::vector<GridPosition> ghostSpawns;
+
+    int playerSpawnCount = 0;
+    int pelletsRemaining = 0;
+
+    for (int row = 0; row < mazeRows; ++row){
+        for (int col = 0; col < mazeCols; ++col){
+            char& tile = maze[row][col];
+
+            if (tile == 'P'){
+                playerSpawn = {row, col};
+                ++playerSpawnCount;
+
+                tile = ' ';
+            }
+            else if (tile == 'G'){
+                ghostSpawns.push_back({row, col});
+                tile = ' ';
+            }
+            else if (tile == '.'){
+                ++pelletsRemaining;
+            }
+        }
+    }
+
+    if (playerSpawnCount != 1 || ghostSpawns.empty()){
+        std::cerr << "Maze needs exactly one player spawn and one ghost spawn";
+        return -1;
+    }
+
+    std::cout << "Maze dimensions: "
+          << mazeRows << " rows x "
+          << mazeCols << " columns\n";
+
+    std::cout << "Player spawn: ("
+          << playerSpawn.row << ", "
+          << playerSpawn.col << ")\n";
+
+    std::cout << "Ghost count: " << ghostSpawns.size() << '\n';
+    std::cout << "Pellets remaining: " << pelletsRemaining << '\n';
+
     // initialize Allegro
     if (!al_init())
     {
@@ -19,7 +96,7 @@ int main()
     }
 
     // Create window, timer, queue
-    ALLEGRO_DISPLAY* display = al_create_display(800, 600);
+    ALLEGRO_DISPLAY* display = al_create_display(mazeCols * TILE_SIZE, mazeRows * TILE_SIZE);
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
     ALLEGRO_EVENT_QUEUE* eventQueue = al_create_event_queue();
 
