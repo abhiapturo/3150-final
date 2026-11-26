@@ -1,4 +1,5 @@
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -86,6 +87,14 @@ int main()
         std::cerr << "Failed to initialize Allegro!";
         return 1;
     }
+
+    // initialize Allegro primitives add-on
+    if (!al_init_primitives_addon())
+    {
+        std::cerr << "Failed to initialize the primitives addon.\n";
+        al_uninstall_system();
+        return 1;
+    }   
 
     // Enable keyboard input
     if (!al_install_keyboard())
@@ -200,9 +209,71 @@ int main()
         // Draw once pending events have been processed.
         if (running && redraw && al_is_event_queue_empty(eventQueue))
         {
+            // Clears the previous frame
             al_clear_to_color(al_map_rgb(0, 0, 0));
 
             // TODO: draw the maze, player, ghosts, and score
+            for (int row = 0; row < mazeRows; ++row){
+                for (int col = 0; col < mazeCols; ++col){
+                    const float x = col * TILE_SIZE;
+                    const float y = row * TILE_SIZE;
+
+                    const float centerX = x + TILE_SIZE / 2.0f;
+                    const float centerY = y + TILE_SIZE / 2.0f;
+
+                    if (maze[row][col] == '#'){
+                        al_draw_filled_rectangle(
+                            x,
+                            y,
+                            x + TILE_SIZE,
+                            y + TILE_SIZE,
+                            al_map_rgb(30, 60, 220)
+                        );
+                    }
+                    else if (maze[row][col] == '.'){
+                        al_draw_filled_circle(
+                            centerX,
+                            centerY,
+                            3.0f,
+                            al_map_rgb(255, 255, 255)
+                        );
+                    }
+                    // if Empty, the path can remain black
+                }
+            }
+
+            const float playerX = playerSpawn.col * TILE_SIZE + TILE_SIZE / 2.0f;
+
+            const float playerY = playerSpawn.row * TILE_SIZE + TILE_SIZE / 2.0f;
+
+            al_draw_filled_circle(
+                playerX,
+                playerY,
+                TILE_SIZE * 0.38f,
+                al_map_rgb(255, 230, 0)
+            );
+
+            al_draw_filled_triangle(
+                playerX,
+                playerY,
+                playerX + TILE_SIZE * 0.45f,
+                playerY - TILE_SIZE * 0.22f,
+                playerX + TILE_SIZE * 0.45f,
+                playerY + TILE_SIZE * 0.22f,
+                al_map_rgb(0, 0, 0)
+            );
+
+            for (const GridPosition& spawn : ghostSpawns){
+                const float ghostX = spawn.col * TILE_SIZE + TILE_SIZE / 2.0f;
+                const float ghostY = spawn.row * TILE_SIZE + TILE_SIZE / 2.0f;
+
+                al_draw_filled_circle(
+                    ghostX,
+                    ghostY,
+                    TILE_SIZE * 0.35f,
+                    al_map_rgb(255, 60, 60)
+                );
+            }
 
             al_flip_display();
             redraw = false;

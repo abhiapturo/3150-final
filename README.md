@@ -10,4 +10,4 @@ A 2D maze game written in C++ using Allegro.
 - Restart support
 
 ## Build instructions
-To be added after configuring the development environment.
+Compile with this command: g++ -std=c++17 -Wall -Wextra -g src/main.cpp -o pacman.exe -lallegro
