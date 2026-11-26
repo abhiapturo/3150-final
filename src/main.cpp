@@ -240,8 +240,11 @@ int main()
                     // Keep the player inside maze's boundaries
                     const bool insideMaze = nextRow >= 0 && nextRow < mazeRows &&
                                             nextCol >= 0 && nextCol < mazeCols;
+
+                    // Checks for wall tiles. If false, maze access will not be evaluated
+                    const bool isMovable = insideMaze && maze[nextRow][nextCol] != '#';
                     
-                    if (positionChanged && insideMaze){
+                    if (positionChanged && isMovable){
                         playerPosition.row = nextRow;
                         playerPosition.col = nextCol;
 
