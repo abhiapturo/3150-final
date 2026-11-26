@@ -81,6 +81,14 @@ int main()
     std::cout << "Ghost count: " << ghostSpawns.size() << '\n';
     std::cout << "Pellets remaining: " << pelletsRemaining << '\n';
 
+    // Current position should change as the player moves
+    // The original spawn position should remain unchanged
+    GridPosition playerPosition = playerSpawn;
+
+    // Minimum number of ticks between moves
+    constexpr int MOVE_DELAY_TICKS = 8;
+    int movementCooldown = 0;
+
     // initialize Allegro
     if (!al_init())
     {
@@ -201,9 +209,49 @@ int main()
                 break;
 
             case ALLEGRO_EVENT_TIMER:
+            {
+                if (movementCooldown > 0){
+                    --movementCooldown;
+                }
+
+                if (movementCooldown == 0){
+                    int nextRow = playerPosition.row;
+                    int nextCol = playerPosition.col;
+                    
+                    // Choose only one direction per update
+                    if (keys[ALLEGRO_KEY_UP]){
+                        --nextRow;
+                    }
+
+                    else if (keys[ALLEGRO_KEY_DOWN]){
+                        ++nextRow;
+                    }
+
+                    else if (keys[ALLEGRO_KEY_LEFT]){
+                        --nextCol;
+                    }
+
+                    else if (keys[ALLEGRO_KEY_RIGHT]){
+                        ++nextCol;
+                    }
+
+                    const bool positionChanged = nextRow != playerPosition.row || nextCol != playerPosition.col;
+                    
+                    // Keep the player inside maze's boundaries
+                    const bool insideMaze = nextRow >= 0 && nextRow < mazeRows &&
+                                            nextCol >= 0 && nextCol < mazeCols;
+                    
+                    if (positionChanged && insideMaze){
+                        playerPosition.row = nextRow;
+                        playerPosition.col = nextCol;
+
+                        movementCooldown = MOVE_DELAY_TICKS;
+                    }
+                }
 
                 redraw = true;
                 break;
+            }
         }
 
         // Draw once pending events have been processed.
@@ -242,10 +290,11 @@ int main()
                 }
             }
 
-            const float playerX = playerSpawn.col * TILE_SIZE + TILE_SIZE / 2.0f;
+            const float playerX = playerPosition.col * TILE_SIZE + TILE_SIZE / 2.0f;
 
-            const float playerY = playerSpawn.row * TILE_SIZE + TILE_SIZE / 2.0f;
+            const float playerY = playerPosition.row * TILE_SIZE + TILE_SIZE / 2.0f;
 
+            // Pacman's head
             al_draw_filled_circle(
                 playerX,
                 playerY,
@@ -253,6 +302,7 @@ int main()
                 al_map_rgb(255, 230, 0)
             );
 
+            // Pacman's mouth
             al_draw_filled_triangle(
                 playerX,
                 playerY,
